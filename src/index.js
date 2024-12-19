@@ -36,7 +36,7 @@ program
   .arguments('<componentName>')
   .option(
     '-l, --lang <language>',
-    'Which language to use (default: "js")',
+    'Which language to use (default: "ts")',
     /^(js|ts)$/i,
     config.lang
   )
@@ -61,11 +61,11 @@ const templatePath = `./templates/${options.lang}.js`;
 const componentDir = `${options.dir}/${componentName}`;
 const filePath = `${componentDir}/${componentName}.${fileExtension}`;
 const indexPath = `${componentDir}/index.${indexExtension}`;
+const stylePath = `${componentDir}/${componentName}.styled.ts`;
 
 // Our index template is super straightforward, so we'll just inline it for now.
 const indexTemplate = prettify(`\
 export * from './${componentName}';
-export { default } from './${componentName}';
 `);
 
 logIntro({
@@ -73,6 +73,14 @@ logIntro({
   dir: componentDir,
   lang: options.lang,
 });
+
+const styleTemplate = prettify(`\
+import styled from 'styled-components';
+
+export const ${componentName}Container = styled.div\`
+  size: 100%;
+\`;
+`);
 
 // Check if componentName is provided
 if (!componentName) {
@@ -112,6 +120,13 @@ mkDirPromise(componentDir)
   )
   .then((template) => {
     logItemCompletion('Component built and saved to disk.');
+    return template;
+  })
+  .then((template) => {
+    writeFilePromise(stylePath, prettify(styleTemplate));
+  })
+  .then((template) => {
+    logItemCompletion('Styled component built and saved to disk.');
     return template;
   })
   .then((template) =>
